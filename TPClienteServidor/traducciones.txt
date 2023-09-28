@@ -1,0 +1,5 @@
+dog:perro
+cat:gato
+house:casa
+now:ahora
+yard:yarda

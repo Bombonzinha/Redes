@@ -1,0 +1,12 @@
+# depslib dependency file v1.0
+1695929618 source:d:\cole\unla\3er año\redes y comunicaciones\proyectos codeblocks\tpclienteservidor\main.cpp
+	<iostream>
+	<fstream>
+	<sstream>
+	<vector>
+	<string>
+	<ctime>
+	<iomanip>
+	<algorithm>
+	<winsock2.h>
+
