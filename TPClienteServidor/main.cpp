@@ -18,17 +18,17 @@ void registrarLog(const std::string& mensaje);
 
 std::string fechaYHora();
 
-void traduccion(SOCKET clientSocket);
+std::string traduccion(SOCKET clientSocket);
 
 std::string buscarTraduccion(const std::string& palabra);
 
-void nuevaTraduccion(SOCKET clientSocket);  // Esta es para PEDIR al cliente una nueva traducción
+std::string nuevaTraduccion(SOCKET clientSocket);  // Esta es para PEDIR al cliente una nueva traducción
 
 bool agregarNuevaTraduccion(const std::string& nuevaTraduccion); // Esta es para METER EN EL ARCHIVO la nueva traducción
 
-void verRegistroActividades(SOCKET clientSocket); // Manda por varios buffer el registro completo
+std::string verRegistroActividades(SOCKET clientSocket); // Manda por varios buffer el registro completo
 
-void administrarUsuarios(SOCKET clientSocket);
+std::string administrarUsuarios(SOCKET clientSocket);
 // Agrega un usuario al archivo credenciales.txt
 bool registrarNuevoUsuario(const std::string& usuario, const std::string& contrasena, const std::string& rol, int intentos);
 
@@ -37,6 +37,12 @@ bool usuarioExiste(const std::string& usuario); // Función para verificar si un 
 std::string obtenerUsuariosBloqueados(); // Devuelve un string con los usuarios que estan bloqueados
 
 bool desbloquearUsuario(const std::string& usuario); // le asigna 0 intentos a un usuario con mas de 3
+
+std::string menuConsulta();
+
+std::string menuAdmin();
+
+std::string mostrarMenu(std::string rol);
 
 int main() {
     std::string mensajeLog="";
@@ -142,7 +148,7 @@ int main() {
                 rolUsuario = credenciales.second; // Esto es para filtrar las opciones según el rol
 
                 if (credenciales.first) {
-                    response = "Acceso concedido como " + credenciales.second;
+                    response = "Acceso concedido como " + credenciales.second + mostrarMenu(rolUsuario);
                     credencialesPedidas = true;
                     mensajeLog = fechaYHora() + ": Inicio de sesion - usuario: " + usuario;  // Esto va a registro.log
                     registrarLog(mensajeLog);
@@ -153,17 +159,22 @@ int main() {
                 send(clientSocket, response.c_str(), response.size(), 0);
             } else { ///ACA SE ELIGEN OPCIONES Y SE HACEN LAS FUNCIONES NECESARIAS
                 if (mensajeCliente == "1") { // Traducir palabra que recibe el servidor
-                    traduccion(clientSocket);
+                    response = traduccion(clientSocket) + mostrarMenu(rolUsuario);
+                    send(clientSocket, response.c_str(), response.size(), 0);
                 } else if (mensajeCliente == "2" && rolUsuario == "ADMIN") { // Agregar una traducción
-                    nuevaTraduccion(clientSocket);
+                    response = nuevaTraduccion(clientSocket) + mostrarMenu(rolUsuario);
+                    send(clientSocket, response.c_str(), response.size(), 0);
                 } else if (mensajeCliente == "3" && rolUsuario == "ADMIN") { // Usuarios
-                    administrarUsuarios(clientSocket);
+                    response = administrarUsuarios(clientSocket) + mostrarMenu(rolUsuario);
+                    send(clientSocket, response.c_str(), response.size(), 0);
                 } else if (mensajeCliente == "4" && rolUsuario == "ADMIN") { // Ver registro de actividades
-                    verRegistroActividades(clientSocket);
+                    response = verRegistroActividades(clientSocket) + mostrarMenu(rolUsuario);
+                    send(clientSocket, response.c_str(), response.size(), 0);
                 } else if (mensajeCliente == "5") { // Cerrar Sesión
                     break; // Aqui cierra sesión
                 } else { // Opción no válida
-                    send(clientSocket, "Opcion no valida", strlen("Opcion no valida"), 0);
+                    response = "Opcion no valida" + mostrarMenu(rolUsuario);
+                    send(clientSocket, response.c_str(), response.size(), 0);
                 }
                 //response = "Mensaje recibido por el servidor";
             }
@@ -290,7 +301,7 @@ std::string fechaYHora(){
     return fechaYHora;
 }
 
-void traduccion(SOCKET clientSocket) {
+std::string traduccion(SOCKET clientSocket) {
     // Puedes recibir datos adicionales del cliente y enviar respuestas aquí
     char buffer[1024];
     // Pedir la palabra del cliente
@@ -298,11 +309,11 @@ void traduccion(SOCKET clientSocket) {
 
     // Recibe la palabra en inglés del cliente
     if (!recibirDatos(clientSocket, buffer, sizeof(buffer))) {
-        return;
+        return "ERROR al recibir datos";
     }
     // Ahora con la palabra en mano, la mando en la funcion de buscar traduccion
     std::string palabra=buffer;
-    if (palabra == "/salir") return;
+    if (palabra == "/salir") return "";
 
     // Convertir la palabra a minúsculas
     std::transform(palabra.begin(), palabra.end(), palabra.begin(), ::tolower);
@@ -311,12 +322,11 @@ void traduccion(SOCKET clientSocket) {
     // La traducción no existe en el archivo
     std::string resultado = buscarTraduccion(palabra);
     if (resultado.empty()) {
-        send(clientSocket, ("No fue posible encontrar la traducción para: " + palabra).c_str(), strlen(("No fue posible encontrar la traducción para: " + palabra).c_str()), 0);
-        return;
+        return "No fue posible encontrar la traducción para: " + palabra;
     }
 
     // Realiza la traducción y envía la respuesta al cliente
-    send(clientSocket, resultado.c_str(), resultado.size(), 0);
+    return resultado;
 }
 
 std::string buscarTraduccion(const std::string& palabra) {
@@ -351,23 +361,22 @@ std::string buscarTraduccion(const std::string& palabra) {
     return "No se encontro traduccion para la palabra " + palabra;
 }
 
-void nuevaTraduccion(SOCKET clientSocket) {
+std::string nuevaTraduccion(SOCKET clientSocket) {
     char buffer[1024];
     // Pedir la nueva traducción al cliente
     send(clientSocket, "Nueva traduccion palabraEnIngles:traduccionEnEspanol: ", strlen("Nueva traduccion palabraEnIngles:traduccionEnEspanol: "), 0);
 
     if (!recibirDatos(clientSocket, buffer, sizeof(buffer))) {
-        return;
+        return "ERROR al recibir datos";
     }
 
     std::string nuevaTraduccion=buffer; // Ejemplo: dog:perro
-    if (nuevaTraduccion == "/salir") return;
+    if (nuevaTraduccion == "/salir") return "";
 
     // Verificar el formato de inserción
     size_t pos = nuevaTraduccion.find(':');
     if (pos == std::string::npos || pos == 0 || pos == nuevaTraduccion.length() - 1) {
-        send(clientSocket, "No fue posible insertar la traducción. El formato de inserción debe ser palabraEnInglés:traducciónEnEspañol", strlen("No fue posible insertar la traducción. El formato de inserción debe ser palabraEnInglés:traducciónEnEspañol"), 0);
-        return;
+        return "No fue posible insertar la traduccion. El formato de insercion debe ser palabraEnIngles:traduccionEnEspanol";
     }
 
     std::string palabraEnIngles = nuevaTraduccion.substr(0, pos);
@@ -375,13 +384,12 @@ void nuevaTraduccion(SOCKET clientSocket) {
 
     // Verificar si la traducción ya existe
     if (buscarTraduccion(palabraEnIngles) == traduccionEnEspanol) {
-        send(clientSocket, ("Ya existe una traducción para " + palabraEnIngles + ": " + traduccionEnEspanol).c_str(), ("Ya existe una traducción para " + palabraEnIngles + ": " + traduccionEnEspanol).size(), 0);
-        return;
+        return "Ya existe una traducción para " + palabraEnIngles + ": " + traduccionEnEspanol;
     }
     if (agregarNuevaTraduccion(nuevaTraduccion)) {
-        send(clientSocket, "Nueva traduccion insertada correctamente", strlen("Nueva traduccion insertada correctamente"), 0);
+        return "Nueva traduccion insertada correctamente";
     } else {
-        send(clientSocket, "Error al insertar la nueva traduccion", strlen("Error al insertar la nueva traduccion"), 0);
+        return "Error al insertar la nueva traduccion";
     }
 }
 
@@ -399,11 +407,10 @@ bool agregarNuevaTraduccion(const std::string& nuevaTraduccion) {
     return true;
 }
 
-void verRegistroActividades(SOCKET clientSocket) {
+std::string verRegistroActividades(SOCKET clientSocket) {
     std::ifstream archivoRegistro("registro.log");
     if (!archivoRegistro) {
-        send(clientSocket, "ERROR: no hay archivo de registro", strlen("ERROR: no hay archivo de registro"), 0);
-        return;
+        return "ERROR: no hay archivo de registro";
     }
 
     std::string linea;
@@ -420,32 +427,31 @@ void verRegistroActividades(SOCKET clientSocket) {
         send(clientSocket, tempContenidoRegistro.c_str(), tempContenidoRegistro.size(), 0);
     }
     contenidoRegistro = '%' + contenidoRegistro; // Cuando se termina de mostrar todo el registro que hay en le buffer, le aviso al cliente con un % en el primer caracter
-    send(clientSocket, contenidoRegistro.c_str(), contenidoRegistro.size(), 0);
+    return contenidoRegistro;
 }
 
-void administrarUsuarios(SOCKET clientSocket) {
+std::string administrarUsuarios(SOCKET clientSocket) {
     char buffer[1024];
     send(clientSocket, "\nUsuarios:\na. Alta\nb. Desbloqueo\n", strlen("\nUsuarios:\na. Alta\nb. Desbloqueo\n"), 0);
 
     if (!recibirDatos(clientSocket, buffer, sizeof(buffer))) {
-        return; // Manejar error o desconexión del cliente
+        return "ERROR al recibir datos"; // Manejar error o desconexión del cliente
     }
     std::string opcion(buffer); // "a" o "b"
-    if (opcion == "/salir") return;
+    if (opcion == "/salir") return "";
 
     if (opcion == "a") { // Alta
-        send(clientSocket, "Ingrese el nombre de usuario y contraseña separados por '|' (Ejemplo: usuario|contraseña): ", strlen("Ingrese el nombre de usuario y contraseña separados por '|' (Ejemplo: usuario|contraseña): "), 0);
+        send(clientSocket, "Ingrese el nombre de usuario y contrasena separados por '|' (Ejemplo: usuario|contrasena): ", strlen("Ingrese el nombre de usuario y contraseña separados por '|' (Ejemplo: usuario|contraseña): "), 0);
 
         if (!recibirDatos(clientSocket, buffer, sizeof(buffer))) {
-            return; // Manejar error o desconexión del cliente
+            return "ERROR al recibir datos"; // Manejar error o desconexión del cliente
         }
 
         std::string datosUsuario(buffer);
-        if (datosUsuario == "/salir") return;
+        if (datosUsuario == "/salir") return "";
         size_t pos = datosUsuario.find('|');
         if (pos == std::string::npos) {
-            send(clientSocket, "Error al dar de alta el nuevo usuario: datos incompletos", strlen("Error al dar de alta el nuevo usuario: datos incompletos"), 0);
-            return;
+            return "Error al dar de alta el nuevo usuario: datos incompletos";
         }
 
         std::string nuevoUsuario = datosUsuario.substr(0, pos);
@@ -456,40 +462,39 @@ void administrarUsuarios(SOCKET clientSocket) {
             // Registrar el nuevo usuario, establecer intentos a 0, rol a CONSULTA
             registrarNuevoUsuario(nuevoUsuario, nuevaContrasena, "CONSULTA", 0);
 
-            send(clientSocket, nuevoUsuario.c_str(), nuevoUsuario.size(), 0);
+            return "Usuario agregado con exito";
         } else {
             std::string mensajeError = "Error: El usuario '" + nuevoUsuario + "' ya existe.";
-            send(clientSocket, mensajeError.c_str(), mensajeError.size(), 0);
+            return mensajeError;
         }
     } else if (opcion == "b") { // Desbloqueo de Usuario
         // Aquí debes implementar la lógica para mostrar los usuarios bloqueados y permitir al cliente seleccionar uno para desbloquear
         std::string usuariosBloqueados = obtenerUsuariosBloqueados();
         if (usuariosBloqueados.empty()) {
-            send(clientSocket, "No se encontraron usuarios bloqueados", strlen("No se encontraron usuarios bloqueados"), 0);
-            return;
+            return "No se encontraron usuarios bloqueados";
         }
 
-        send(clientSocket, usuariosBloqueados.c_str(), usuariosBloqueados.size(), 0);
+//        send(clientSocket, usuariosBloqueados.c_str(), usuariosBloqueados.size(), 0);
 
         send(clientSocket, "Ingrese el nombre de usuario a desbloquear: ", strlen("Ingrese el nombre de usuario a desbloquear: "), 0);
 
         if (!recibirDatos(clientSocket, buffer, sizeof(buffer))) {
-            return; // Manejar error o desconexión del cliente
+            return "ERROR al recibir datos"; // Manejar error o desconexión del cliente
         }
 
         std::string usuarioADesbloquear(buffer);
-        if (usuarioADesbloquear == "/salir") return;
+        if (usuarioADesbloquear == "/salir") return "";
 
         // Realizar la lógica de desbloqueo del usuario
         bool desbloqueado = desbloquearUsuario(usuarioADesbloquear);
 
         if (desbloqueado) {
-            send(clientSocket, (usuarioADesbloquear + " desbloqueado correctamente").c_str(), strlen((usuarioADesbloquear + " desbloqueado correctamente").c_str()), 0);
+            return usuarioADesbloquear + " desbloqueado correctamente";
         } else {
-            send(clientSocket, "Error al desbloquear el usuario", strlen("Error al desbloquear el usuario"), 0);
+            return "Error al desbloquear el usuario";
         }
     } else {
-        send(clientSocket, "Opción no válida", strlen("Opción no válida"), 0);
+        return "Opción no válida";
     }
 }
 
@@ -609,6 +614,37 @@ bool desbloquearUsuario(const std::string& usuario) {
     return true;
 }
 
+std::string menuConsulta() {
+    std::string menu;
+    menu += "\n";
+    menu += "Menu de Consulta:\n";
+    menu += "1. Traducir\n";
+    menu += "5. Cerrar Sesion\n";
+    return menu;
+}
 
+std::string menuAdmin() {
+    std::string menu;
+    menu += "\n";
+    menu += "Menu de Administrador:\n";
+    menu += "1. Traducir\n";
+    menu += "2. Nueva Traduccion\n";
+    menu += "3. Usuarios:\n";
+    menu += "   a. Alta\n";
+    menu += "   b. Desbloqueo\n";
+    menu += "4. Ver Registro de Actividades\n";
+    menu += "5. Cerrar Sesion\n";
+    return menu;
+}
+
+std::string mostrarMenu(std::string rol){
+    std::string retorno="";
+    if (rol == "ADMIN"){
+        retorno = menuAdmin();
+    } else if (rol == "CONSULTA"){
+        retorno = menuConsulta();
+    }
+    return retorno;
+}
 
 
