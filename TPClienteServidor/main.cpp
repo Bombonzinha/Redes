@@ -160,21 +160,16 @@ int main() {
             } else { ///ACA SE ELIGEN OPCIONES Y SE HACEN LAS FUNCIONES NECESARIAS
                 if (mensajeCliente == "1") { // Traducir palabra que recibe el servidor
                     response = traduccion(clientSocket) + mostrarMenu(rolUsuario);
-//                    send(clientSocket, response.c_str(), response.size(), 0);
                 } else if (mensajeCliente == "2" && rolUsuario == "ADMIN") { // Agregar una traducción
                     response = nuevaTraduccion(clientSocket) + mostrarMenu(rolUsuario);
-//                    send(clientSocket, response.c_str(), response.size(), 0);
                 } else if (mensajeCliente == "3" && rolUsuario == "ADMIN") { // Usuarios
                     response = administrarUsuarios(clientSocket) + mostrarMenu(rolUsuario);
-//                    send(clientSocket, response.c_str(), response.size(), 0);
                 } else if (mensajeCliente == "4" && rolUsuario == "ADMIN") { // Ver registro de actividades
                     response = verRegistroActividades(clientSocket) + mostrarMenu(rolUsuario);
-//                    send(clientSocket, response.c_str(), response.size(), 0);
                 } else if (mensajeCliente == "5") { // Cerrar Sesión
                     break; // Aqui cierra sesión
                 } else { // Opción no válida
                     response = "Opcion no valida" + mostrarMenu(rolUsuario);
-//                    send(clientSocket, response.c_str(), response.size(), 0);
                 }
                 //response = "Mensaje recibido por el servidor";
                 send(clientSocket, response.c_str(), response.size(), 0);
@@ -637,11 +632,11 @@ std::string menuAdmin() {
 }
 
 std::string mostrarMenu(std::string rol){
-    std::string retorno="";
+    std::string retorno="\n";
     if (rol == "ADMIN"){
-        retorno = menuAdmin();
+        retorno += menuAdmin();
     } else if (rol == "CONSULTA"){
-        retorno = menuConsulta();
+        retorno += menuConsulta();
     }
     return retorno;
 }

@@ -4,3 +4,4 @@ house:casa
 now:ahora
 yard:yarda
 dick:pija
+towel:toalla

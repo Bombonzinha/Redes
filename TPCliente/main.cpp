@@ -1,8 +1,9 @@
 #include <iostream>
 #include <winsock2.h>
 
-void menuAdmin();
-void menuConsulta();
+//void menuAdmin();
+//void menuConsulta();
+bool esOpcion(std::string buffer);
 
 int main() {
     WSADATA wsData;
@@ -35,12 +36,15 @@ int main() {
     char buffer[1024];
     std::string rolUsuario;
     bool menuMode = false;
+    int contador = 0;
     while (true) {
         std::cout << "Cliente: ";
         std::cin.getline(buffer, sizeof(buffer));
-        std::string numero = buffer; // Esto es para guardar el numero que eligió el usuario
         send(clientSocket, buffer, strlen(buffer), 0);
-
+        std::string opcion = buffer;
+        if (contador >0 && !esOpcion(opcion) && buffer[0] != '$'){
+            system("cls");
+        }
         memset(buffer, 0, sizeof(buffer));
         int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
         if (bytesReceived == SOCKET_ERROR) {
@@ -51,36 +55,7 @@ int main() {
             break;
         }
         std::cout << "Servidor: " << buffer << std::endl;
-        // Verificar el rol del usuario y mostrar el menú adecuado
-        // Los primeros 2 if es cuando hay que iniciar sesión
-//        if (strcmp(buffer, "Acceso concedido como CONSULTA") == 0 && !menuMode) {
-//            rolUsuario = "CONSULTA";
-//            menuMode = true;
-//        } else if (strcmp(buffer, "Acceso concedido como ADMIN") == 0 && !menuMode) {
-//            rolUsuario = "ADMIN";
-//            menuMode = true;
-//        } else if (buffer[0] == '$'){ // Esto es cuando se muestra el registro, el primer caracter es "%" entonces menu=true
-//            std::cout << "\nPresiona enter para cargar el resto del registro..." << std::endl;
-//            menuMode = false;
-//        } else if (buffer[0] == '%'){
-//            std::cout << "\nYa se mostró todo el registo" << std::endl;
-//            menuMode = true;
-//        } else if (numero == "a" || "b"){
-//            menuMode = false; // Acá lo pongo en false para que no me muestre el menú cuando elijo la opción 3
-//        }
-//        std::cout << menuMode << std::endl;
-//        if (menuMode){ // Cuando NO hay que iniciar sesión
-//            if (rolUsuario=="CONSULTA"){
-//                menuConsulta();
-//                menuMode = false;
-//            } else if (rolUsuario=="ADMIN"){
-//                menuAdmin();
-//                menuMode = false;
-//            }
-//        } else {
-//            menuMode = true;
-//        }
-//        std::cout << menuMode << std::endl;
+        contador++;
     }
 
 
@@ -89,6 +64,11 @@ int main() {
 
     return 0;
 }
+
+/** \brief
+ *
+ * \return void
+ *
 
 void menuConsulta() {
     std::cout << "Servidor: " << std::endl;
@@ -108,4 +88,11 @@ void menuAdmin() {
     std::cout << "4. Ver Registro de Actividades" << std::endl;
     std::cout << "5. Cerrar Sesion" << std::endl;
 }
-
+ */
+bool esOpcion(std::string buffer){
+    bool retorno = false;
+    if(buffer == "1" || buffer == "2" || buffer == "3" || buffer == "4" || buffer == "a" || buffer == "b"){
+        retorno = true;
+    }
+    return retorno;
+}

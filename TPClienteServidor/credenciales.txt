@@ -1,8 +1,9 @@
 admin|123|ADMIN|0
-user|321|CONSULTA|3
+user|321|CONSULTA|0
 julio|avc|CONSULTA|0
 pelo|tudo|CONSULTA|0
 ju|lieta|CONSULTA|0
 jiji|jojo|CONSULTA|0
 asdf|jiojg|CONSULTA|0
 homer|pablo|CONSULTA|0
+pad|ton|CONSULTA|0
