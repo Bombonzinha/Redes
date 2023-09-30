@@ -1,5 +1,5 @@
 admin|123|ADMIN|0
-user|321|CONSULTA|1
+user|321|CONSULTA|3
 julio|avc|CONSULTA|0
 pelo|tudo|CONSULTA|0
 ju|lieta|CONSULTA|0

@@ -160,23 +160,24 @@ int main() {
             } else { ///ACA SE ELIGEN OPCIONES Y SE HACEN LAS FUNCIONES NECESARIAS
                 if (mensajeCliente == "1") { // Traducir palabra que recibe el servidor
                     response = traduccion(clientSocket) + mostrarMenu(rolUsuario);
-                    send(clientSocket, response.c_str(), response.size(), 0);
+//                    send(clientSocket, response.c_str(), response.size(), 0);
                 } else if (mensajeCliente == "2" && rolUsuario == "ADMIN") { // Agregar una traducción
                     response = nuevaTraduccion(clientSocket) + mostrarMenu(rolUsuario);
-                    send(clientSocket, response.c_str(), response.size(), 0);
+//                    send(clientSocket, response.c_str(), response.size(), 0);
                 } else if (mensajeCliente == "3" && rolUsuario == "ADMIN") { // Usuarios
                     response = administrarUsuarios(clientSocket) + mostrarMenu(rolUsuario);
-                    send(clientSocket, response.c_str(), response.size(), 0);
+//                    send(clientSocket, response.c_str(), response.size(), 0);
                 } else if (mensajeCliente == "4" && rolUsuario == "ADMIN") { // Ver registro de actividades
                     response = verRegistroActividades(clientSocket) + mostrarMenu(rolUsuario);
-                    send(clientSocket, response.c_str(), response.size(), 0);
+//                    send(clientSocket, response.c_str(), response.size(), 0);
                 } else if (mensajeCliente == "5") { // Cerrar Sesión
                     break; // Aqui cierra sesión
                 } else { // Opción no válida
                     response = "Opcion no valida" + mostrarMenu(rolUsuario);
-                    send(clientSocket, response.c_str(), response.size(), 0);
+//                    send(clientSocket, response.c_str(), response.size(), 0);
                 }
                 //response = "Mensaje recibido por el servidor";
+                send(clientSocket, response.c_str(), response.size(), 0);
             }
             //send(clientSocket, response.c_str(), response.size(), 0);
         }
@@ -473,10 +474,8 @@ std::string administrarUsuarios(SOCKET clientSocket) {
         if (usuariosBloqueados.empty()) {
             return "No se encontraron usuarios bloqueados";
         }
-
-//        send(clientSocket, usuariosBloqueados.c_str(), usuariosBloqueados.size(), 0);
-
-        send(clientSocket, "Ingrese el nombre de usuario a desbloquear: ", strlen("Ingrese el nombre de usuario a desbloquear: "), 0);
+        std::string listaDeUsuarios = "\nUsuarios Bloqueados: " + usuariosBloqueados + "\nIngrese el nombre de usuario a desbloquear: ";
+        send(clientSocket, listaDeUsuarios.c_str(), listaDeUsuarios.size(), 0);
 
         if (!recibirDatos(clientSocket, buffer, sizeof(buffer))) {
             return "ERROR al recibir datos"; // Manejar error o desconexión del cliente
@@ -566,7 +565,7 @@ std::string obtenerUsuariosBloqueados() {
     archivoCredenciales.close();
 
     if (usuariosBloqueados.empty()) {
-        return "No se encontraron usuarios bloqueados";
+        return "";
     }
 
     return usuariosBloqueados;
@@ -577,19 +576,19 @@ bool desbloquearUsuario(const std::string& usuario) {
     if (!archivoEntrada) {
         return false; // No se pudo abrir el archivo
     }
-
+    std::string retorno = "";
     std::vector<std::string> lineas;
     std::string linea;
     while (std::getline(archivoEntrada, linea)) {
         size_t pos = linea.find('|');
-        if (pos != std::string::npos) {
+        if (pos != std::string::npos) { // Si se encontró el '|'
             std::string nombreUsuario = linea.substr(0, pos);
 
             if (nombreUsuario == usuario) {
                 // Encontramos el usuario, ahora lo modificamos para establecer intentos a 0
-                size_t intentos = linea.find_last_of('|');
-                if (intentos != std::string::npos) {
-                    // Encuentra la posición del último pipe '|'
+                size_t intentos = linea.find_last_of('|'); // Busco la posición del último '|', significa que lo que siga despues van a ser los intentos
+                if (intentos != std::string::npos) { // Si se encontró el nuevo '|'
+                    // Encuentra la posición del último '|'
                     linea.replace(intentos + 1, std::string::npos, "0");
                 }
             }
@@ -646,5 +645,3 @@ std::string mostrarMenu(std::string rol){
     }
     return retorno;
 }
-
-
