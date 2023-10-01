@@ -1,11 +1,21 @@
 #include <iostream>
 #include <winsock2.h>
+#include <WS2tcpip.h>
 
 //void menuAdmin();
 //void menuConsulta();
 bool esOpcion(std::string buffer);
 
 int main() {
+    std::string ip;
+    int puerto;
+
+    std::cout << "Ingrese la dirección IP del servidor: ";
+    std::cin >> ip;
+    std::cout << "Ingrese el puerto del servidor: ";
+    std::cin >> puerto;
+    std::cin.ignore();
+
     WSADATA wsData;
     if (WSAStartup(MAKEWORD(2, 2), &wsData) != 0) {
         std::cerr << "Error al inicializar Winsock" << std::endl;
@@ -21,8 +31,8 @@ int main() {
 
     sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(5005);
-    serverAddr.sin_addr.s_addr = inet_addr("192.168.1.34"); // Cambiar a la dirección del servidor
+    serverAddr.sin_port = htons(puerto);
+    serverAddr.sin_addr.s_addr = inet_addr(ip.c_str());
 
     if (connect(clientSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
         std::cerr << "Error al conectar al servidor" << std::endl;
@@ -47,6 +57,9 @@ int main() {
         }
         memset(buffer, 0, sizeof(buffer));
         int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
+        if (opcion == "b" && buffer[0] == 'N') {
+            system("cls");
+        }
         if (bytesReceived == SOCKET_ERROR) {
             std::cerr << "Error al recibir datos del servidor" << std::endl;
             break;

@@ -1,7 +1,3 @@
+university:universidad
 dog:perro
 cat:gato
-house:casa
-now:ahora
-yard:yarda
-dick:pija
-towel:toalla

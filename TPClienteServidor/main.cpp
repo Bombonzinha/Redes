@@ -36,7 +36,7 @@ bool usuarioExiste(const std::string& usuario); // Función para verificar si un 
 
 std::string obtenerUsuariosBloqueados(); // Devuelve un string con los usuarios que estan bloqueados
 
-bool desbloquearUsuario(const std::string& usuario); // le asigna 0 intentos a un usuario con mas de 3
+std::string desbloquearUsuario(const std::string& usuario); // le asigna 0 intentos a un usuario con mas de 3
 
 std::string menuConsulta();
 
@@ -45,6 +45,14 @@ std::string menuAdmin();
 std::string mostrarMenu(std::string rol);
 
 int main() {
+    std::string ip;
+    int puerto;
+    std::cout << "Ingrese la dirección IP del servidor: ";
+    std::cin >> ip;
+    std::cout << "Ingrese el puerto del servidor: ";
+    std::cin >> puerto;
+    std::cin.ignore();
+
     std::string mensajeLog="";
     std::string response;
     WSADATA wsData;
@@ -62,8 +70,9 @@ int main() {
 
     sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(5005);
-    serverAddr.sin_addr.s_addr = INADDR_ANY;
+    serverAddr.sin_port = htons(puerto);
+    serverAddr.sin_addr.s_addr = inet_addr(ip.c_str());
+
 
     int reuseAddr = 1;
     if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&reuseAddr), sizeof(reuseAddr)) == SOCKET_ERROR) {
@@ -153,7 +162,8 @@ int main() {
                     mensajeLog = fechaYHora() + ": Inicio de sesion - usuario: " + usuario;  // Esto va a registro.log
                     registrarLog(mensajeLog);
                 } else {
-                    response = "Acceso denegado";
+                    response = credenciales.second;
+                    send(clientSocket, response.c_str(), response.size(), 0);
                     break;
                 }
                 send(clientSocket, response.c_str(), response.size(), 0);
@@ -245,11 +255,16 @@ std::pair<bool, std::string> verificarCredenciales(const std::string& usuario, c
 
             if (intentos >= 3) {
                 usuarioBloqueado = true;
+                rolArchivoReturn = "usuario bloqueado";
             } else if (contrasenaArchivo == contrasena) {
                 intentos = 0;
                 accesoConcedido = true;
                 rolArchivoReturn = rolArchivo;
+            } else if(intentos == 2){
+                rolArchivoReturn = "Datos de usuario incorrectos\nUSUARIO BLOQUEADO";
+                intentos++;
             } else {
+                rolArchivoReturn = "Datos de usuario incorrectos";
                 intentos++;
             }
 
@@ -346,7 +361,7 @@ std::string buscarTraduccion(const std::string& palabra) {
 
             traduccion.erase(0, traduccion.find_first_not_of(" \t\r\n"));
             traduccion.erase(traduccion.find_last_not_of(" \t\r\n") + 1);
-
+            std::cout << palabra << std::endl;
             // Comparo con la palabra qwue mandé por parametro
             if (palabraEnIngles == palabra) {
                 return palabra + " en ingles es " + traduccion + " en español.";
@@ -395,8 +410,9 @@ bool agregarNuevaTraduccion(const std::string& nuevaTraduccion) {
     if (!archivoTraducciones) {
         return false;
     }
-
-    archivoTraducciones << nuevaTraduccion << std::endl;
+    std::string aMinuscula = nuevaTraduccion;
+    std::transform(aMinuscula.begin(), aMinuscula.end(), aMinuscula.begin(), ::tolower);
+    archivoTraducciones << aMinuscula << std::endl;
 
     archivoTraducciones.close();
 
@@ -452,16 +468,19 @@ std::string administrarUsuarios(SOCKET clientSocket) {
 
         std::string nuevoUsuario = datosUsuario.substr(0, pos);
         std::string nuevaContrasena = datosUsuario.substr(pos + 1);
+        std::string mensajeError = "";
 
-        // Validaciones adicionales, como verificar si el usuario ya existe y si los campos no están vacíos, deberían realizarse aquí
-        if (!usuarioExiste(nuevoUsuario)){
+        if (usuarioExiste(nuevoUsuario)){
+            mensajeError = "Error: El usuario '" + nuevoUsuario + "' ya existe.";
+            return mensajeError;
+        } else if (nuevoUsuario == "" || nuevaContrasena == ""){
+            mensajeError = "Error: Campos ingresados incorrectamente";
+            return mensajeError;
+        } else {
             // Registrar el nuevo usuario, establecer intentos a 0, rol a CONSULTA
             registrarNuevoUsuario(nuevoUsuario, nuevaContrasena, "CONSULTA", 0);
-
             return "Usuario agregado con exito";
-        } else {
-            std::string mensajeError = "Error: El usuario '" + nuevoUsuario + "' ya existe.";
-            return mensajeError;
+
         }
     } else if (opcion == "b") { // Desbloqueo de Usuario
         // Aquí debes implementar la lógica para mostrar los usuarios bloqueados y permitir al cliente seleccionar uno para desbloquear
@@ -480,12 +499,14 @@ std::string administrarUsuarios(SOCKET clientSocket) {
         if (usuarioADesbloquear == "/salir") return "";
 
         // Realizar la lógica de desbloqueo del usuario
-        bool desbloqueado = desbloquearUsuario(usuarioADesbloquear);
+        std::string desbloqueado = desbloquearUsuario(usuarioADesbloquear);
 
-        if (desbloqueado) {
+        if (desbloqueado=="Ok") {
             return usuarioADesbloquear + " desbloqueado correctamente";
-        } else {
+        } else if (desbloqueado == "File"){
             return "Error al desbloquear el usuario";
+        } else if (desbloqueado == "No"){
+            return "El usuario no se encuentra bloqueado";
         }
     } else {
         return "Opción no válida";
@@ -566,14 +587,16 @@ std::string obtenerUsuariosBloqueados() {
     return usuariosBloqueados;
 }
 
-bool desbloquearUsuario(const std::string& usuario) {
+std::string desbloquearUsuario(const std::string& usuario) {
     std::ifstream archivoEntrada("credenciales.txt");
     if (!archivoEntrada) {
-        return false; // No se pudo abrir el archivo
+        return "File"; // No se pudo abrir el archivo
     }
     std::string retorno = "";
     std::vector<std::string> lineas;
     std::string linea;
+    std::string ultimoString = "";
+    int flag = 0;
     while (std::getline(archivoEntrada, linea)) {
         size_t pos = linea.find('|');
         if (pos != std::string::npos) { // Si se encontró el '|'
@@ -582,9 +605,11 @@ bool desbloquearUsuario(const std::string& usuario) {
             if (nombreUsuario == usuario) {
                 // Encontramos el usuario, ahora lo modificamos para establecer intentos a 0
                 size_t intentos = linea.find_last_of('|'); // Busco la posición del último '|', significa que lo que siga despues van a ser los intentos
-                if (intentos != std::string::npos) { // Si se encontró el nuevo '|'
+                ultimoString = linea.back();
+                if (intentos != std::string::npos && ultimoString == "3") { // Si se encontró el nuevo '|' y el ultimo caracter es 3
                     // Encuentra la posición del último '|'
                     linea.replace(intentos + 1, std::string::npos, "0");
+                    flag++;
                 }
             }
         }
@@ -592,11 +617,13 @@ bool desbloquearUsuario(const std::string& usuario) {
     }
 
     archivoEntrada.close();
-
+    if (flag == 0){
+        return "No";
+    }
     // Volver a escribir todas las líneas en el archivo
     std::ofstream archivoSalida("credenciales.txt");
     if (!archivoSalida) {
-        return false; // No se pudo abrir el archivo
+        return "File"; // No se pudo abrir el archivo
     }
 
     for (const std::string& linea : lineas) {
@@ -605,7 +632,7 @@ bool desbloquearUsuario(const std::string& usuario) {
 
     archivoSalida.close();
 
-    return true;
+    return "Ok";
 }
 
 std::string menuConsulta() {

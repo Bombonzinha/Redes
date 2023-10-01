@@ -3,7 +3,8 @@
 	<iostream>
 	<winsock2.h>
 
-1696043585 source:d:\cole\unla\3er año\redes y comunicaciones\proyectos codeblocks\tpcliente\main.cpp
+1696117116 source:d:\cole\unla\3er año\redes y comunicaciones\proyectos codeblocks\tpcliente\main.cpp
 	<iostream>
 	<winsock2.h>
+	<WS2tcpip.h>
 
