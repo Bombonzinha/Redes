@@ -2,8 +2,6 @@
 #include <winsock2.h>
 #include <WS2tcpip.h>
 
-//void menuAdmin();
-//void menuConsulta();
 bool esOpcion(std::string buffer);
 
 int main() {
@@ -78,30 +76,6 @@ int main() {
     return 0;
 }
 
-/** \brief
- *
- * \return void
- *
-
-void menuConsulta() {
-    std::cout << "Servidor: " << std::endl;
-    std::cout << "Menu de Consulta:" << std::endl;
-    std::cout << "1. Traducir" << std::endl;
-    std::cout << "5. Cerrar Sesion" << std::endl;
-}
-
-void menuAdmin() {
-    std::cout << "Servidor: " << std::endl;
-    std::cout << "Menu de Administrador:" << std::endl;
-    std::cout << "1. Traducir" << std::endl;
-    std::cout << "2. Nueva Traduccion" << std::endl;
-    std::cout << "3. Usuarios:" << std::endl;
-    std::cout << "   a. Alta" << std::endl;
-    std::cout << "   b. Desbloqueo" << std::endl;
-    std::cout << "4. Ver Registro de Actividades" << std::endl;
-    std::cout << "5. Cerrar Sesion" << std::endl;
-}
- */
 bool esOpcion(std::string buffer){
     bool retorno = false;
     if(buffer == "1" || buffer == "2" || buffer == "3" || buffer == "4" || buffer == "a" || buffer == "b"){

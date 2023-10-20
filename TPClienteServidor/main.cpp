@@ -29,7 +29,7 @@ bool agregarNuevaTraduccion(const std::string& nuevaTraduccion); // Esta es para
 std::string verRegistroActividades(SOCKET clientSocket); // Manda por varios buffer el registro completo
 
 std::string administrarUsuarios(SOCKET clientSocket);
-// Agrega un usuario al archivo credenciales.txt
+
 bool registrarNuevoUsuario(const std::string& usuario, const std::string& contrasena, const std::string& rol, int intentos);
 
 bool usuarioExiste(const std::string& usuario); // Función para verificar si un usuario ya está registrado
@@ -198,7 +198,7 @@ int main() {
 
     return 0;
 }
-
+// Funcion para recibir datos del cliente
 bool recibirDatos(SOCKET clientSocket, char* buffer, int bufferSize) {
     memset(buffer, 0, bufferSize);
     int bytesReceived = recv(clientSocket, buffer, bufferSize - 1, 0);
@@ -211,7 +211,7 @@ bool recibirDatos(SOCKET clientSocket, char* buffer, int bufferSize) {
     }
     return true;
 }
-
+// Funcion para leer un archivo
 std::string leerArchivo(const std::string& nombreArchivo) { // Le mando por parámetro el nombre del archivo
     std::ifstream archivo(nombreArchivo); // Leer archivo
     std::string contenido; // String para cargar los datos (ACA VAN A ESTAR LOS STRINGS PARA COMPARAR)
@@ -228,7 +228,7 @@ std::string leerArchivo(const std::string& nombreArchivo) { // Le mando por pará
 
     return contenido;
 }
-
+// Retorna un boolean para verificar si se aceptan las credenciales, y otro con el rol del usuario para los menús
 std::pair<bool, std::string> verificarCredenciales(const std::string& usuario, const std::string& contrasena) {
     std::string contenidoArchivo = leerArchivo("credenciales.txt");
 
@@ -262,7 +262,7 @@ std::pair<bool, std::string> verificarCredenciales(const std::string& usuario, c
                 rolArchivoReturn = rolArchivo;
             } else if(intentos == 2){
                 rolArchivoReturn = "Datos de usuario incorrectos\nUSUARIO BLOQUEADO";
-                intentos++;
+                intentos++; /// Acá está el control de veces que se logeó mal
             } else {
                 rolArchivoReturn = "Datos de usuario incorrectos";
                 intentos++;
@@ -288,7 +288,7 @@ std::pair<bool, std::string> verificarCredenciales(const std::string& usuario, c
     // y el string contiene el rol del usuario
     return std::make_pair(usuarioEncontrado && accesoConcedido, rolArchivoReturn);
 }
-
+// Esto es para guardar en el archivo de registro
 void registrarLog(const std::string& mensaje) {
     std::ofstream archivoLog("registro.log", std::ios::app); // Abre el archivo en modo de adjuntar
     if (archivoLog.is_open()) {
@@ -298,7 +298,7 @@ void registrarLog(const std::string& mensaje) {
         std::cerr << "Error al abrir el archivo de registro.log" << std::endl;
     }
 }
-
+// Esto devuelve la fecha y la hora actual en formato string
 std::string fechaYHora(){
     // Obtener la fecha y la hora actual del sistema
     std::time_t tiempoActual = std::time(nullptr);
@@ -311,7 +311,7 @@ std::string fechaYHora(){
 
     return fechaYHora;
 }
-
+/// Opción 1: Traducir
 std::string traduccion(SOCKET clientSocket) {
     // Puedes recibir datos adicionales del cliente y enviar respuestas aquí
     char buffer[1024];
@@ -339,7 +339,7 @@ std::string traduccion(SOCKET clientSocket) {
     // Realiza la traducción y envía la respuesta al cliente
     return resultado;
 }
-
+// Retorna la palabra en español enviándole la palabra en inglés por parametro (si no encuentra retorna error)
 std::string buscarTraduccion(const std::string& palabra) {
     const std::string archivoTraducciones = "traducciones.txt";
 
@@ -371,7 +371,7 @@ std::string buscarTraduccion(const std::string& palabra) {
 
     return "No se encontro traduccion para la palabra " + palabra;
 }
-
+/// Opción 2: Agregar traducción
 std::string nuevaTraduccion(SOCKET clientSocket) {
     char buffer[1024];
     // Pedir la nueva traducción al cliente
@@ -403,7 +403,7 @@ std::string nuevaTraduccion(SOCKET clientSocket) {
         return "Error al insertar la nueva traduccion";
     }
 }
-
+// Función para agregar una traducción al archivo de traducciones
 bool agregarNuevaTraduccion(const std::string& nuevaTraduccion) {
     std::ofstream archivoTraducciones("traducciones.txt", std::ios::app);
 
@@ -418,7 +418,7 @@ bool agregarNuevaTraduccion(const std::string& nuevaTraduccion) {
 
     return true;
 }
-
+/// Opción 4: Lee el archivo de registro y lo retorna como varios string de 1024 caracteres
 std::string verRegistroActividades(SOCKET clientSocket) {
     std::ifstream archivoRegistro("registro.log");
     if (!archivoRegistro) {
@@ -441,7 +441,7 @@ std::string verRegistroActividades(SOCKET clientSocket) {
     contenidoRegistro = '%' + contenidoRegistro; // Cuando se termina de mostrar todo el registro que hay en le buffer, le aviso al cliente con un % en el primer caracter
     return contenidoRegistro;
 }
-
+/// Opción 3: Submenú de usuarios
 std::string administrarUsuarios(SOCKET clientSocket) {
     char buffer[1024];
     send(clientSocket, "\nUsuarios:\na. Alta\nb. Desbloqueo\n", strlen("\nUsuarios:\na. Alta\nb. Desbloqueo\n"), 0);
@@ -513,7 +513,7 @@ std::string administrarUsuarios(SOCKET clientSocket) {
     }
 }
 
-// Función para registrar un nuevo usuario en el archivo credenciales.txt
+// Función para registrar un nuevo usuario en el archivo
 bool registrarNuevoUsuario(const std::string& usuario, const std::string& contrasena, const std::string& rol, int intentos) {
     // Abre el archivo en modo de escritura (appended)
     std::ofstream archivoCredenciales("credenciales.txt", std::ios::app);
@@ -527,10 +527,11 @@ bool registrarNuevoUsuario(const std::string& usuario, const std::string& contra
     // Cierra el archivo
     archivoCredenciales.close();
 
-    return true; // El usuario se registró correctamente
+    // El usuario se registró correctamente
+    return true;
 }
 
-// Función para verificar si un usuario ya existe en el archivo credenciales.txt
+// Función para verificar si un usuario ya existe en el archivo
 bool usuarioExiste(const std::string& usuario) {
     // Abre el archivo en modo de lectura
     std::ifstream archivoCredenciales("credenciales.txt");
@@ -551,9 +552,10 @@ bool usuarioExiste(const std::string& usuario) {
     }
 
     archivoCredenciales.close();
-    return false; // El usuario no fue encontrado en el archivo
+    // El usuario no fue encontrado en el archivo
+    return false;
 }
-
+// Devuelve los usuariosBloqueados, si no hay, devuelve un error
 std::string obtenerUsuariosBloqueados() {
     std::ifstream archivoCredenciales("credenciales.txt");
     if (!archivoCredenciales) {
@@ -566,8 +568,8 @@ std::string obtenerUsuariosBloqueados() {
         size_t pos = linea.find('|');
         if (pos != std::string::npos) {
             std::string usuario = linea.substr(0, pos);
-            int intentos = std::stoi(linea.substr(linea.find_last_of('|') + 1)); // Obtener intentos como entero
-
+            // Obtener intentos como entero
+            int intentos = std::stoi(linea.substr(linea.find_last_of('|') + 1));
             // Si el usuario tiene 3 intentos o más, considerarlo bloqueado
             if (intentos >= 3) {
                 if (!usuariosBloqueados.empty()) {
@@ -586,7 +588,7 @@ std::string obtenerUsuariosBloqueados() {
 
     return usuariosBloqueados;
 }
-
+// Retorna mensaje de que se logró desbloquear al usuario/no esta bloqueado/error
 std::string desbloquearUsuario(const std::string& usuario) {
     std::ifstream archivoEntrada("credenciales.txt");
     if (!archivoEntrada) {
@@ -634,7 +636,7 @@ std::string desbloquearUsuario(const std::string& usuario) {
 
     return "Ok";
 }
-
+// Menús
 std::string menuConsulta() {
     std::string menu;
     menu += "\n";

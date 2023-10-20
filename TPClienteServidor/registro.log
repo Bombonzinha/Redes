@@ -30,3 +30,9 @@
 2023-09-30_23:07: Cierre de sesion - usuario: roberto
 2023-09-30_23:08: Inicio de sesion - usuario: admin
 2023-09-30_23:09: Cierre de sesion - usuario: admin
+=============================
+ =======Inicia Servidor=======
+=============================
+2023-10-02_11:02: Socket creado. Puerto de escucha: 5005
+2023-10-02_11:03: Inicio de sesion - usuario: admin
+2023-10-02_11:04: Cierre de sesion - usuario: admin
