@@ -4,17 +4,18 @@
 	<ActiveTarget name="Debug" />
 	<File name="main.cpp" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="6" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="7401" topLine="164" />
+			<Cursor1 position="19174" topLine="199" />
 		</Cursor>
 		<Folding>
-			<Collapse line="201" />
-			<Collapse line="204" />
+			<Collapse line="214" />
 			<Collapse line="231" />
+			<Collapse line="291" />
 			<Collapse line="301" />
 			<Collapse line="314" />
 			<Collapse line="342" />
 			<Collapse line="374" />
 			<Collapse line="406" />
+			<Collapse line="444" />
 			<Collapse line="516" />
 			<Collapse line="534" />
 			<Collapse line="558" />

@@ -45,13 +45,13 @@ std::string menuAdmin();
 std::string mostrarMenu(std::string rol);
 
 int main() {
-    std::string ip;
-    int puerto;
-    std::cout << "Ingrese la dirección IP del servidor: ";
-    std::cin >> ip;
-    std::cout << "Ingrese el puerto del servidor: ";
-    std::cin >> puerto;
-    std::cin.ignore();
+    std::string ip = "192.168.1.34";
+    int puerto = 5005;
+//    std::cout << "Ingrese la dirección IP del servidor: ";
+//    std::cin >> ip;
+//    std::cout << "Ingrese el puerto del servidor: ";
+//    std::cin >> puerto;
+//    std::cin.ignore();
 
     std::string mensajeLog="";
     std::string response;
@@ -431,14 +431,14 @@ std::string verRegistroActividades(SOCKET clientSocket) {
         contenidoRegistro += linea + '\n';
     }
     archivoRegistro.close();
-
+    char buffer[1024];
     std::string tempContenidoRegistro;
-    while (contenidoRegistro.size()>=1023){ // Mientras el string final sea mayor al tamaño del buffer, le resto los primeros 1024 char
-        tempContenidoRegistro = '$' + contenidoRegistro.substr(0, 1023); // Le agrego el $ para decirle al cliente que aún hay que mostrar más registro
-        contenidoRegistro = contenidoRegistro.substr(1023);
+    while (contenidoRegistro.size()>1023){ // Mientras el string final sea mayor al tamaño del buffer, le resto los primeros 1024 char
+        tempContenidoRegistro = contenidoRegistro.substr(0, 1024); // Le agrego el $ para decirle al cliente que aún hay que mostrar más registro
+        contenidoRegistro = contenidoRegistro.substr(1024);
         send(clientSocket, tempContenidoRegistro.c_str(), tempContenidoRegistro.size(), 0);
+        recibirDatos(clientSocket, buffer, sizeof(buffer));
     }
-    contenidoRegistro = '%' + contenidoRegistro; // Cuando se termina de mostrar todo el registro que hay en le buffer, le aviso al cliente con un % en el primer caracter
     return contenidoRegistro;
 }
 /// Opción 3: Submenú de usuarios

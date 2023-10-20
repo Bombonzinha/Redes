@@ -5,14 +5,13 @@
 bool esOpcion(std::string buffer);
 
 int main() {
-    std::string ip;
-    int puerto;
-
-    std::cout << "Ingrese la dirección IP del servidor: ";
-    std::cin >> ip;
-    std::cout << "Ingrese el puerto del servidor: ";
-    std::cin >> puerto;
-    std::cin.ignore();
+    std::string ip = "192.168.1.34";
+    int puerto = 5005;
+//    std::cout << "Ingrese la dirección IP del servidor: ";
+//    std::cin >> ip;
+//    std::cout << "Ingrese el puerto del servidor: ";
+//    std::cin >> puerto;
+//    std::cin.ignore();
 
     WSADATA wsData;
     if (WSAStartup(MAKEWORD(2, 2), &wsData) != 0) {
@@ -43,14 +42,15 @@ int main() {
 
     char buffer[1024];
     std::string rolUsuario;
-    bool menuMode = false;
+    bool registro = false;
     int contador = 0;
     while (true) {
         std::cout << "Cliente: ";
         std::cin.getline(buffer, sizeof(buffer));
         send(clientSocket, buffer, strlen(buffer), 0);
         std::string opcion = buffer;
-        if (contador >0 && !esOpcion(opcion) && buffer[0] != '$'){
+
+        if (contador >0 && !esOpcion(opcion) && strlen(buffer) != 1024){
             system("cls");
         }
         memset(buffer, 0, sizeof(buffer));
@@ -58,6 +58,15 @@ int main() {
         if (opcion == "b" && buffer[0] == 'N') {
             system("cls");
         }
+
+        while (bytesReceived == 1024) {
+            std::cout << buffer << std::endl;
+            send(clientSocket, ".", 1, 0);
+            memset(buffer, 0, sizeof(buffer));
+            bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
+            registro = true;
+        }
+
         if (bytesReceived == SOCKET_ERROR) {
             std::cerr << "Error al recibir datos del servidor" << std::endl;
             break;
@@ -65,7 +74,12 @@ int main() {
             std::cout << "Servidor desconectado" << std::endl;
             break;
         }
-        std::cout << "Servidor: " << buffer << std::endl;
+        if(!registro){
+            std::cout << "Servidor: " << buffer << std::endl;
+        } else {
+            std::cout << buffer << std::endl;
+            registro = false;
+        }
         contador++;
     }
 
