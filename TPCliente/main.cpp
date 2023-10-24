@@ -5,13 +5,13 @@
 bool esOpcion(std::string buffer);
 
 int main() {
-    std::string ip = "192.168.1.34";
-    int puerto = 5005;
-//    std::cout << "Ingrese la dirección IP del servidor: ";
-//    std::cin >> ip;
-//    std::cout << "Ingrese el puerto del servidor: ";
-//    std::cin >> puerto;
-//    std::cin.ignore();
+    std::string ip /*= "192.168.1.34"*/;
+    int puerto /*= 5005*/;
+    std::cout << "Ingrese la dirección IP del servidor: ";
+    std::cin >> ip;
+    std::cout << "Ingrese el puerto del servidor: ";
+    std::cin >> puerto;
+    std::cin.ignore();
 
     WSADATA wsData;
     if (WSAStartup(MAKEWORD(2, 2), &wsData) != 0) {
@@ -60,7 +60,8 @@ int main() {
         }
 
         while (bytesReceived == 1024) {
-            std::cout << buffer << std::endl;
+//            std::cout << buffer << std::endl;
+            std::cout.write(buffer, strlen(buffer) - 1);
             send(clientSocket, ".", 1, 0);
             memset(buffer, 0, sizeof(buffer));
             bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);

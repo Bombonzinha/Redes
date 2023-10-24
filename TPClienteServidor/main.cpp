@@ -45,13 +45,13 @@ std::string menuAdmin();
 std::string mostrarMenu(std::string rol);
 
 int main() {
-    std::string ip = "192.168.1.34";
-    int puerto = 5005;
-//    std::cout << "Ingrese la dirección IP del servidor: ";
-//    std::cin >> ip;
-//    std::cout << "Ingrese el puerto del servidor: ";
-//    std::cin >> puerto;
-//    std::cin.ignore();
+    std::string ip /*= "192.168.1.34"*/;
+    int puerto /*= 5005*/;
+    std::cout << "Ingrese la dirección IP del servidor: ";
+    std::cin >> ip;
+    std::cout << "Ingrese el puerto del servidor: ";
+    std::cin >> puerto;
+    std::cin.ignore();
 
     std::string mensajeLog="";
     std::string response;
